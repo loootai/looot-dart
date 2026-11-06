@@ -124,6 +124,9 @@ class RouteAttempt extends LoootObject {
   String? get status => raw['status'] as String?;
   num? get chargedUsd => raw['chargedUsd'] as num?;
   int? get ms => (raw['ms'] as num?)?.toInt();
+  bool get billed => raw['billed'] == true;
+  String? get reason => raw['reason'] as String?;
+  String? get verdict => raw['verdict'] as String?;
 }
 
 /// The route a fallback run took.
@@ -134,6 +137,7 @@ class RunRoute extends LoootObject {
   String? get outcome => raw['outcome'] as String?;
   num? get chargedUsd => raw['chargedUsd'] as num?;
   bool get capped => raw['capped'] == true;
+  String? get summary => raw['summary'] as String?;
   List<RouteAttempt> get attempts =>
       _maps(raw['attempts']).map(RouteAttempt.new).toList();
   List<Map<String, dynamic>> get skipped => _maps(raw['skipped']);
@@ -208,6 +212,12 @@ class RunSummary extends LoootObject {
   String? get createdAt => raw['createdAt'] as String?;
   String? get completedAt => raw['completedAt'] as String?;
   num? get actualCost => raw['actualCost'] as num?;
+  Map<String, dynamic>? get error => _map(raw['error']);
+  String? get servedEndpointId => raw['servedEndpointId'] as String?;
+  String? get servedProviderId => raw['servedProviderId'] as String?;
+  int? get providerResponseStatus =>
+      (raw['providerResponseStatus'] as num?)?.toInt();
+  int? get resultBytes => (raw['resultBytes'] as num?)?.toInt();
 }
 
 /// A page of `GET /v1/runs`.
@@ -249,6 +259,12 @@ class PublicCatalogItem extends LoootObject {
   String? get operationId => raw['operationId'] as String?;
   String? get title => raw['title'] as String?;
   String? get description => raw['description'] as String?;
+  String? get revision => raw['revision'] as String?;
+  List<String> get categories =>
+      [for (final c in (raw['categories'] as List? ?? const [])) '$c'];
+  dynamic get verification => raw['verification'];
+  String? get publishedAt => raw['publishedAt'] as String?;
+  String? get provenanceTier => raw['provenanceTier'] as String?;
   List<String> get capabilities =>
       [for (final c in (raw['capabilities'] as List? ?? const [])) '$c'];
   List<Map<String, dynamic>> get parameters => _maps(raw['parameters']);
@@ -288,6 +304,11 @@ class SearchRow extends LoootObject {
   String? get priceBasis => raw['priceBasis'] as String?;
   num? get costPerSuccessUsd => raw['costPerSuccessUsd'] as num?;
   Map<String, dynamic>? get works => _map(raw['works']);
+  String? get sourceCapability => raw['sourceCapability'] as String?;
+  String? get category => raw['category'] as String?;
+  bool get isAsync => raw['async'] == true;
+  dynamic get credential => raw['credential'];
+  Map<String, dynamic>? get job => _map(raw['job']);
 }
 
 /// `GET /v1/catalog/search`.
@@ -301,6 +322,9 @@ class SearchResult extends LoootObject {
 
   /// Null on the last page.
   int? get nextOffset => (raw['nextOffset'] as num?)?.toInt();
+  String? get prefer => raw['prefer'] as String?;
+  dynamic get warnings => raw['warnings'];
+  dynamic get priceHint => raw['priceHint'];
 }
 
 /// `GET /v1/operations/{endpointId}`.
@@ -315,6 +339,7 @@ class Operation extends LoootObject {
   Map<String, dynamic>? get inputSchema => _map(raw['inputSchema']);
   Map<String, dynamic>? get requestBinding => _map(raw['requestBinding']);
   Map<String, dynamic>? get uiSchema => _map(raw['uiSchema']);
+  dynamic get outputFormat => raw['outputFormat'];
   dynamic get usageHints => raw['usageHints'];
 
   /// True when the endpoint writes somewhere (`effectClassification: effectful`).
@@ -330,6 +355,7 @@ class TopUpLink extends LoootObject {
   String? get checkoutUrl => raw['checkoutUrl'] as String?;
   String? get dashboardUrl => raw['dashboardUrl'] as String?;
   String? get message => raw['message'] as String?;
+  String? get reason => raw['reason'] as String?;
 
   /// Best link to show a user: checkout when set, else the dashboard.
   String? get url => checkoutUrl ?? dashboardUrl;
@@ -340,6 +366,9 @@ class Balance extends LoootObject {
   Balance(super.raw);
 
   String? get workspaceId => raw['workspaceId'] as String?;
+  num? get holds => raw['holds'] as num?;
+  num? get trialCreditMicros => raw['trialCreditMicros'] as num?;
+  num? get recentSpendMicros => raw['recentSpendMicros'] as num?;
   String? get currency => raw['currency'] as String?;
 
   /// USD.

@@ -350,7 +350,11 @@ class Looot {
 
   /// Downloads a file from a run whose `result.media.downloadPath` is set.
   Future<Uint8List> downloadMedia(String downloadPath) async {
-    final path = downloadPath.startsWith('/') ? downloadPath : '/$downloadPath';
+    final path = downloadPath.startsWith(_baseUrl)
+        ? downloadPath.substring(_baseUrl.length)
+        : downloadPath.startsWith('/')
+            ? downloadPath
+            : '/$downloadPath';
     final res = await _exec('GET', path, const {}, auth: true, accept: '*/*');
     return res.bodyBytes;
   }
@@ -373,7 +377,18 @@ class Looot {
         body: body, auth: auth, extraHeaders: extraHeaders);
     final text = utf8.decode(res.bodyBytes, allowMalformed: true);
     if (text.isEmpty) return <String, dynamic>{};
-    final decoded = jsonDecode(text);
+    final Object? decoded;
+    try {
+      decoded = jsonDecode(text);
+    } on FormatException {
+      throw LoootError(
+        status: res.statusCode,
+        code: 'invalid_response',
+        message:
+            '$method $path answered HTTP ${res.statusCode} with a body that is not JSON',
+        body: text,
+      );
+    }
     return decoded is Map
         ? Map<String, dynamic>.from(decoded)
         : <String, dynamic>{'data': decoded};
@@ -390,6 +405,7 @@ class Looot {
   }) async {
     final token = auth ? _token : null;
     final agent = _agent;
+    final ua = runtimeUserAgent();
     if (auth && token == null) {
       throw LoootError(
         status: 401,
@@ -402,7 +418,7 @@ class Looot {
       'Accept': accept,
       if (body != null) 'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
-      'User-Agent': 'looot-dart/$version ${runtimeUserAgent()}',
+      if (ua != null) 'User-Agent': 'looot-dart/$version $ua',
       if (agent != null) 'X-Looot-Agent': _clip(agent),
       ...extraHeaders,
     };
@@ -417,8 +433,11 @@ class Looot {
       try {
         final req = http.Request(method, uri)..headers.addAll(headers);
         if (payload != null) req.bodyBytes = utf8.encode(payload);
-        final streamed = await _http.send(req).timeout(_timeout);
-        final res = await http.Response.fromStream(streamed).timeout(_timeout);
+        final res = await (() async {
+          final streamed = await _http.send(req);
+          return http.Response.fromStream(streamed);
+        })()
+            .timeout(_timeout);
         if (res.statusCode >= 200 && res.statusCode < 300) return res;
         error = _errorFrom(method, path, res);
       } on TimeoutException {
@@ -433,6 +452,14 @@ class Looot {
           status: 0,
           code: 'network_error',
           message: '$method $path failed: ${e.message}',
+          retryable: true,
+        );
+      } on Exception catch (e) {
+        // TLS and other transport failures that package:http does not wrap.
+        error = LoootError(
+          status: 0,
+          code: 'network_error',
+          message: '$method $path failed: ${e.runtimeType}',
           retryable: true,
         );
       }

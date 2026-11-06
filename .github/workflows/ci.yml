@@ -25,6 +25,10 @@ jobs:
       - run: dart format --output=none --set-exit-if-changed .
       - run: dart analyze --fatal-infos
       - run: dart test
+      - name: Core has no dart:io outside env_io.dart
+        run: |
+          if grep -rn "dart:io" lib | grep -v "lib/src/env_io.dart"; then exit 1; fi
+          dart compile js -o /tmp/web_check.js test/web_check.dart
       - name: Publish dry run
         if: matrix.sdk == 'stable'
         run: dart pub publish --dry-run

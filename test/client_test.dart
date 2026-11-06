@@ -468,6 +468,28 @@ void main() {
     });
   });
 
+  group('transport edge cases', () {
+    test('2xx non-JSON body becomes invalid_response', () async {
+      final r = Recorder([(_) => http.Response('<html>', 200)]);
+      await expectLater(
+          make(r).balance(),
+          throwsA(isA<LoootError>()
+              .having((e) => e.code, 'code', 'invalid_response')));
+    });
+
+    test('unwrapped transport exceptions become network_error', () async {
+      final c = Looot(
+        token: fakeToken,
+        maxRetries: 0,
+        client: MockClient((_) async => throw const FormatException('tls')),
+      );
+      await expectLater(
+          c.balance(),
+          throwsA(isA<LoootError>()
+              .having((e) => e.code, 'code', 'network_error')));
+    });
+  });
+
   group('retries', () {
     test('429 retries with the same idempotency key and waits retry-after',
         () async {

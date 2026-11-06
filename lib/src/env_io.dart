@@ -4,4 +4,4 @@ import 'dart:io' show Platform;
 String? readEnv(String name) => Platform.environment[name];
 
 /// The runtime part of the User-Agent, for example `dart/3.5.0`.
-String runtimeUserAgent() => 'dart/${Platform.version.split(' ').first}';
+String? runtimeUserAgent() => 'dart/${Platform.version.split(' ').first}';

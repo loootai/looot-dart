@@ -27,7 +27,7 @@ call looot from your own server and keep the token there.
 
 ## Quickstart
 
-Search, check the balance, then verify an email. `prefer` lets looot try the next provider on
+Search, inspect, check the balance, then verify an email. `prefer` lets looot try the next provider on
 a miss. This run is paid.
 
 ```dart
@@ -36,7 +36,8 @@ import 'package:looot/looot.dart';
 Future<void> main() async {
   final looot = Looot(); // reads LOOOT_TOKEN
   final found = await looot.search(q: 'verify an email', limit: 3);
-  print(found.endpoints.first.endpointId);
+  final op = await looot.inspect(found.endpoints.first.endpointId!);
+  print('${op.estimatedMaxCost} ${op.inputSchema}');
 
   final bal = await looot.balance();
   if ((bal.available ?? 0) < 0.05) {
