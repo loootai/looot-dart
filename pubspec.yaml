@@ -1,0 +1,23 @@
+name: looot
+description: Dart and Flutter client for the looot API. One token for data providers, runs with fallback, typed errors.
+version: 0.1.0
+homepage: https://looot.ai
+repository: https://github.com/loootai/looot-dart
+issue_tracker: https://github.com/loootai/looot-dart/issues
+documentation: https://docs.looot.ai/reference
+topics:
+  - looot
+  - api-client
+  - sdk
+  - ai-agents
+  - data-enrichment
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+dependencies:
+  http: ^1.2.2
+
+dev_dependencies:
+  lints: 5.1.1
+  test: 1.25.8

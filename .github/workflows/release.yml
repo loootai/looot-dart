@@ -1,0 +1,35 @@
+# Runs when a tag like v0.1.0 is pushed. Publishing uses pub.dev automated publishing with
+# GitHub OIDC, so there is no secret. It only works after the first version was published by
+# hand and automated publishing was enabled on the package (see PUBLISH.md).
+name: release
+
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+*"]
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pub.dev
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: dart-lang/setup-dart@v1.7.1
+      - name: Version matches the tag
+        run: |
+          want="${GITHUB_REF_NAME#v}"
+          grep -q "^version: $want\$" pubspec.yaml || { echo "pubspec.yaml version is not $want"; exit 1; }
+          grep -q "const String version = '$want'" lib/src/version.dart || { echo "lib/src/version.dart is not $want"; exit 1; }
+      - run: dart pub get
+      - run: dart analyze --fatal-infos
+      - run: dart test
+      - run: dart pub publish --dry-run
+      - name: Publish to pub.dev
+        run: dart pub publish --force
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes "See CHANGELOG.md." --verify-tag
